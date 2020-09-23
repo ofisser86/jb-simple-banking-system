@@ -1,7 +1,7 @@
+from hstest.exceptions import WrongAnswerException
 from hstest.test_case import CheckResult
 from hstest.stage_test import StageTest
 from hstest.test_case import TestCase
-from hstest.exceptions import WrongAnswerException
 import random
 import re
 
@@ -100,6 +100,36 @@ def test_output_after_wrong_card_number(output: str, value_to_return):
     return value_to_return
 
 
+def is_passed_luhn_algorithm(number):
+    luhn = [int(char) for char in str(number)]
+    for i, num in enumerate(luhn):
+        if (i + 1) % 2 == 0:
+            continue
+        temp = num * 2
+        luhn[i] = temp if temp < 10 else temp - 9
+    return sum(luhn) % 10 == 0
+
+
+def test_luhn_algorithm(output: str, correct_num_of_cards):
+    global are_all_inputs_read
+
+    numbers = re.findall(r'400000\d{10,}', output, re.MULTILINE)
+
+    for number in numbers:
+        if len(number) != 16:
+            return CheckResult.wrong(f'Wrong card number \'{number}\'. The card number should be 16-digit length.')
+        if not is_passed_luhn_algorithm(number):
+            return CheckResult.wrong('The card number \'{}\' doesn\'t pass luhn algorithm!'.format(number))
+
+    if len(numbers) != correct_num_of_cards:
+        return CheckResult.wrong(
+            f'After creating {correct_num_of_cards} cards, found {len(numbers)} cards with correct format\n'
+            f'The card number should be 16-digit length and should start with 400000.')
+
+    are_all_inputs_read = True
+    return '0'
+
+
 class BankingSystem(StageTest):
 
     def generate(self):
@@ -131,10 +161,14 @@ class BankingSystem(StageTest):
                     lambda output: test_sign_in_with_wrong_card_number(output, None),
                     lambda output: test_output_after_wrong_card_number(output, '0')
                 ]),
+            TestCase(
+                stdin=[
+                    '1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1',
+                    lambda output: test_luhn_algorithm(output, 11),
+                ])
         ]
 
     def check(self, reply: str, attach) -> CheckResult:
-        global are_all_inputs_read
         if are_all_inputs_read:
             return CheckResult.correct()
         else:
