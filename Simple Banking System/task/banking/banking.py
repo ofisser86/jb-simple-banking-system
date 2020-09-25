@@ -2,7 +2,29 @@
 import sys
 import sqlite3
 from random import sample
-database = "card.s3db"
+
+
+def create_db(database):
+    """ create a database connection to a SQLite database """
+    conn = None
+    try:
+        conn = sqlite3.connect(database)
+        cur = conn.cursor()
+        cur.execute("""CREATE TABLE IF NOT EXISTS card (
+                        id INTEGER,
+                        number TEXT,
+                        pin TEXT,
+                        balance INTEGER DEFAULT 0
+                    );""")
+    except Exception as e:
+        print(e)
+    finally:
+        if conn:
+            conn.close()
+
+
+database = 'card.s3db'
+create_db(database)
 
 
 def create_connection(db_file):
@@ -42,7 +64,7 @@ def update_card(conn, card):
     :return:
     """
 
-    sql = """INSERT INTO Card(number, pin)
+    sql = """INSERT INTO card(number, pin)
               VALUES({card}, {PIN})""".format(card=card['card_number'], PIN=card['PIN'])
     cur = conn.cursor()
     cur.execute(sql)
@@ -65,13 +87,13 @@ def create_card():
         checksum = 10 - sum(luhn) % 10
 
     card_number = '400000' + str(bin_number) + str(checksum)
-    pin = ''.join([str(n) for n in sample(range(9), 4)])
+    pin = ''.join([str(n) for n in sample(range(1, 9), 4)])
     card['card_number'] = int(card_number)
     card['PIN'] = int(pin)
     card['balance'] = 0
 
-    sql_create_card_table = """CREATE TABLE IF NOT EXISTS Card (
-                        id INTEGER AUTOINCREMENT,
+    sql_create_card_table = """CREATE TABLE IF NOT EXISTS card (
+                        id INTEGER,
                         number TEXT,
                         pin TEXT,
                         balance INTEGER DEFAULT 0
@@ -98,26 +120,36 @@ def get_all_from_card(conn):
         :return:
         """
     cur = conn.cursor()
-    cur.execute("SELECT * FROM Card")
-
+    cur.execute("SELECT * FROM card")
     rows = cur.fetchall()
 
     return rows
 
 
+def check_card(conn, card_to_check, pin_to_check,):
+    cur = conn.cursor()
+    card_numbers = [i for i in cur.execute("SELECT number, pin FROM card")]
+    return (str(card_to_check), str(pin_to_check)) in card_numbers
+
+
 def user_account(check_card_number, check_card_pin):
-    if check_card_number in temp_store and check_card_pin in temp_store:
+    conn = create_connection(database)
+    if check_card(conn, check_card_number, check_card_pin):
         print()
         print('You have successfully logged in!')
         print()
     else:
+        print()
         return "Wrong card number or PIN!"
 
+    cur = conn.cursor()
+    cur.execute(f'SELECT balance FROM card WHERE  number={check_card_number}')
+    balance = cur.fetchone()
     while True:
         sub_menu_option = int(input("1. Balance\n2. Log out\n0. Exit\n"))
         print()
         if sub_menu_option == 1:
-            print(f"Balance: {user_card['balance']}")
+            print(f"Balance: {balance[0]}")
             print()
         elif sub_menu_option == 2:
             return "You have successfully logged out!"
@@ -138,6 +170,7 @@ while True:
         # temp_store.extend([user_card_number, user_card_pin, user_card_balance])
         print('Your card has been created')
         print(f"Your card number:\n{user_card_number}\nYour card PIN:\n{user_card_pin}")
+        check_card(connection, user_card_number, user_card_pin)
     elif menu_option == 2:
         validate_card_number = int(input("Enter your card number:\n"))
         validate_card_pin = int(input("Enter your PIN:\n"))
