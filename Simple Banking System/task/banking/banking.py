@@ -1,148 +1,186 @@
-# Write your code here
-import sys
+from random import randint
 import sqlite3
-from random import sample
-database = "card.s3db"
 
 
-def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except Exception as e:
-        print(e)
+class Bank:
+    def __init__(self):
+        self.logged_in = False
+        self.conn = sqlite3.connect('card.s3db')
+        self.cur = self.conn.cursor()
+        self.create_table()
+        self.current_card = None
+        self.menu()
 
-    return conn
+    def create_table(self):
+        sql_create_card_table = """CREATE TABLE IF NOT EXISTS card (id INTEGER, number TEXT,
+        pin TEXT, balance INTEGER DEFAULT 0); """
+        self.cur.execute(sql_create_card_table)
+        self.conn.commit()
 
+    def create_card(self, id_, number, pin, balance):
+        sql_insert_card = """INSERT INTO card (id, number, pin, balance) VALUES (?, ?, ?, ?); """
+        data_tuple = (id_, number, pin, balance)
+        self.cur.execute(sql_insert_card, data_tuple)
+        self.conn.commit()
 
-def create_table(conn, create_table_sql):
-    """ create a table from the create_table_sql statement
-    :param conn: Connection object
-    :param create_table_sql: a CREATE TABLE statement
-    :return:
-    """
-    try:
-        c = conn.cursor()
-        c.execute(create_table_sql)
-    except Exception as e:
-        print(e)
+    def gen_id(self):
+        query = """SELECT id FROM card ORDER BY id DESC LIMIT 1;"""
+        self.cur.execute(query)
+        records = self.cur.fetchall()
+        try:
+            return records[0][0] + 1
+        except IndexError:
+            return 1
 
+    def get_all_cards(self):
+        query = """SELECT number FROM card"""
+        self.cur.execute(query)
+        rows = self.cur.fetchall()
+        return rows
 
-def update_card(conn, card):
-    """
-    Create a new task
-    :param conn:
-    :param card:
-    :return:
-    """
+    def check_card(self, transfer_to_card):
+        query = f"""SELECT number FROM card WHERE number = {transfer_to_card}"""
+        self.cur.execute(query)
+        n = sum(map(int, list(str(transfer_to_card)[6:len(transfer_to_card) - 1]))) + int(transfer_to_card[len(transfer_to_card) - 1])
+        print(n, int(transfer_to_card[len(transfer_to_card) - 1]))
+        card = self.cur.fetchone()
+        if card is None:
+            print("Such a card does not exist.\n")
+            self.account_menu()
+        elif self.current_card == transfer_to_card:
+            print("You can't transfer money to the same account!\n")
+            self.account_menu()
+        elif self.luhn_alg():
+            print("Probably you made a mistake in the card number. Please try again!")
+            self.account_menu()
 
-    sql = """INSERT INTO Card(number, pin)
-              VALUES({card}, {PIN})""".format(card=card['card_number'], PIN=card['PIN'])
-    cur = conn.cursor()
-    cur.execute(sql)
-    conn.commit()
-    return cur.lastrowid
+    def read_card(self, card, pin):
+        query = """SELECT number, pin FROM card WHERE number = ? AND pin = ?"""
+        data_tuple = (card, pin)
+        self.cur.execute(query, data_tuple)
+        rows = self.cur.fetchone()
+        return rows
 
+    def menu(self):
+        while not self.logged_in:
+            print('1. Create an account\n2. Log into account\n0. Exit')
+            choice = input()
+            if choice == '1':
+                self.create()
+            elif choice == '2':
+                self.login()
+            elif choice == '0':
+                print('\nBye!')
+                self.cur.close()
+                self.conn.close()
+                quit()
 
-def create_card():
-    card = {}
-    bin_number = "".join([str(n) for n in sample(range(9), 9)])
-    luhn = [int(i) for i in '400000' + str(bin_number)]
-    luhn[::2] = [2 * x for x in luhn[::2]]
-    for i in range(len(luhn)):
-        if luhn[i] > 9:
-            luhn[i] -= 9
+    def account_menu(self):
+        while self.logged_in:
+            print('1. Balance\n2. Add income\n3. Do transfer\n4. Close account\n5. Log out\n0. Exit')
+            choice = input()
+            if choice == '1':
+                balance = self.get_balance()
+                print(f'\nBalance: {balance}\n')
+            elif choice == '2':
+                print("\nEnter income:\n")
+                income = int(input())
+                self.add_income(income)
+                print('Income was added!\n')
+            elif choice == '3':
+                print('Transfer\n')
+                transfer_to_card = input("Enter card number:\n")
+                self.check_card(transfer_to_card)
+                money_to_transfer = int(input("Enter how much money you want to transfer:\n"))
+                self.do_transfer(transfer_to_card, money_to_transfer)
+            elif choice == '4':
+                try:
+                    self.close_account()
+                    print("\nThe account has been closed!\n")
+                    self.logged_in = False
+                    self.current_card = None
+                except Exception as e:
+                    print(e)
+            elif choice == '5':
+                self.logged_in = False
+                print('\nYou have successfully logged out!\n')
+            elif choice == '0':
+                print('\nBye!')
+                self.cur.close()
+                self.conn.close()
+                quit()
 
-    if sum(luhn) % 10 == 0:
-        checksum = 0
-    else:
-        checksum = 10 - sum(luhn) % 10
-
-    card_number = '400000' + str(bin_number) + str(checksum)
-    pin = ''.join([str(n) for n in sample(range(9), 4)])
-    card['card_number'] = int(card_number)
-    card['PIN'] = int(pin)
-    card['balance'] = 0
-
-    sql_create_card_table = """CREATE TABLE IF NOT EXISTS Card (
-                        id INTEGER AUTOINCREMENT,
-                        number TEXT,
-                        pin TEXT,
-                        balance INTEGER DEFAULT 0
-                    );"""
-
-    # create a database connection
-    conn = create_connection(database)
-
-    # create tables
-    if conn is not None:
-        # create projects table
-        create_table(conn, sql_create_card_table)
-        update_card(conn, card)
-    else:
-        print("Error! cannot create the database connection.")
-
-    return card
-
-
-def get_all_from_card(conn):
-    """
-        Query all rows in the tasks table
-        :param conn: the Connection object
-        :return:
-        """
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM Card")
-
-    rows = cur.fetchall()
-
-    return rows
-
-
-def user_account(check_card_number, check_card_pin):
-    if check_card_number in temp_store and check_card_pin in temp_store:
+    def create(self):
         print()
-        print('You have successfully logged in!')
-        print()
-    else:
-        return "Wrong card number or PIN!"
+        id_ = self.gen_id()
+        card = self.luhn_alg()
+        pin = str.zfill(str(randint(0000, 9999)), 4)
+        self.create_card(id_, card, pin, 0)
+        print(f'Your card has been created\nYour card number:\n{card}\nYour card PIN:\n{pin}\n')
 
-    while True:
-        sub_menu_option = int(input("1. Balance\n2. Log out\n0. Exit\n"))
-        print()
-        if sub_menu_option == 1:
-            print(f"Balance: {user_card['balance']}")
-            print()
-        elif sub_menu_option == 2:
-            return "You have successfully logged out!"
-        elif sub_menu_option == 0:
-            sys.exit()
+    def login(self):
+        print('\nEnter your card number:')
+        card = input()
+        print('Enter your PIN:')
+        pin = input()
+        cards = self.read_card(card, pin)
+        if cards:
+            print('\nYou have successfully logged in!\n')
+            self.logged_in = True
+            self.current_card = card
+            self.account_menu()
+        else:
+            print('\nWrong card number or Pin!\n')
+
+    def get_balance(self):
+        query = f"""SELECT balance FROM card WHERE number = {self.current_card};"""
+        balance = self.cur.execute(query)
+        return balance.fetchone()[0]
+
+    def add_income(self, income):
+        updated_balance = self.get_balance() + income
+        query = f"""UPDATE card SET balance = {updated_balance} WHERE number = {self.current_card}"""
+        self.cur.execute(query)
+        self.conn.commit()
+
+    def do_transfer(self, transfer_to_card, money_to_transfer):
+        card_balance = self.get_balance()
+        query = f"""BEGIN TRANSACTION;
+                    UPDATE card
+                       SET balance = balance - {money_to_transfer}
+                    WHERE number = {self.current_card};
+                    
+                    UPDATE card
+                       SET balance = balance + {money_to_transfer}
+                    WHERE number = {transfer_to_card};
+                    COMMIT;
+                  """
+        if card_balance >= money_to_transfer:
+            self.cur.executescript(query)
+            self.conn.commit()
+            print("Success!\n")
+        else:
+            return 'Not enough money!'
+
+    def close_account(self):
+        query = f"""DELETE FROM card WHERE number = {self.current_card};"""
+        self.cur.execute(query)
+        self.conn.commit()
+        self.current_card = None
 
 
-while True:
-    menu_option = int(input("1. Create an account\n2. Log into account\n0. Exit\n"))
-    print()
-    if menu_option == 1:
-        user_card = create_card()
-        connection = create_connection(database)
-        all_cards = get_all_from_card(connection)
-        user_card_number = user_card['card_number']
-        user_card_pin = user_card['PIN']
-        user_card_balance = user_card['balance']
-        # temp_store.extend([user_card_number, user_card_pin, user_card_balance])
-        print('Your card has been created')
-        print(f"Your card number:\n{user_card_number}\nYour card PIN:\n{user_card_pin}")
-    elif menu_option == 2:
-        validate_card_number = int(input("Enter your card number:\n"))
-        validate_card_pin = int(input("Enter your PIN:\n"))
-        print(user_account(validate_card_number, validate_card_pin))
-    elif menu_option == 0:
-        print('Bye!')
-        break
-    print()
+    def luhn_alg(self):
+        card = '400000' + str.zfill(str(randint(000000000, 999999999)), 9)
+        card_check = [int(i) for i in card]
+        for index, _ in enumerate(card_check):
+            if index % 2 == 0:
+                card_check[index] *= 2
+            if card_check[index] > 9:
+                card_check[index] -= 9
+        check_sum = str((10 - sum(card_check) % 10) % 10)
+        card += check_sum
+        return card
+
+
+if __name__ == '__main__':
+    stage_4 = Bank()
