@@ -1,0 +1,13 @@
+type: code
+files:
+- name: main.py
+  visible: true
+  text: '# put your python code here'
+  learner_created: false
+feedback_link: https://hyperskill.org/learn/step/5919
+status: Solved
+feedback:
+  message: <html>Correct solution<br/><br/>Continue on <a href="https://hyperskill.org/learn/step/5919">JetBrains
+    Academy</a></html>
+  time: Sat, 26 Sep 2020 15:38:31 UTC
+record: -1
