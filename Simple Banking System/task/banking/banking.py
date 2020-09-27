@@ -41,17 +41,23 @@ class Bank:
     def check_card(self, transfer_to_card):
         query = f"""SELECT number FROM card WHERE number = {transfer_to_card}"""
         self.cur.execute(query)
-        n = sum(map(int, list(str(transfer_to_card)[6:len(transfer_to_card) - 1]))) + int(transfer_to_card[len(transfer_to_card) - 1])
-        print(n, int(transfer_to_card[len(transfer_to_card) - 1]))
+
+        luhn = [int(i) for i in transfer_to_card[:-1]]
+        luhn[::2] = [2 * x for x in luhn[::2]]
+        for i in range(len(luhn)):
+            if luhn[i] > 9:
+                luhn[i] -= 9
+
+        checksum = int(transfer_to_card[len(transfer_to_card) - 1])
         card = self.cur.fetchone()
-        if card is None:
+        if (sum(luhn) + checksum) % 10 != 0:
+            print("Probably you made a mistake in the card number. Please try again!\n")
+            self.account_menu()
+        elif card is None:
             print("Such a card does not exist.\n")
             self.account_menu()
         elif self.current_card == transfer_to_card:
             print("You can't transfer money to the same account!\n")
-            self.account_menu()
-        elif self.luhn_alg():
-            print("Probably you made a mistake in the card number. Please try again!")
             self.account_menu()
 
     def read_card(self, card, pin):
@@ -83,16 +89,16 @@ class Bank:
                 balance = self.get_balance()
                 print(f'\nBalance: {balance}\n')
             elif choice == '2':
-                print("\nEnter income:\n")
+                print("\nEnter income:")
                 income = int(input())
                 self.add_income(income)
                 print('Income was added!\n')
             elif choice == '3':
-                print('Transfer\n')
+                print('\nTransfer')
                 transfer_to_card = input("Enter card number:\n")
                 self.check_card(transfer_to_card)
                 money_to_transfer = int(input("Enter how much money you want to transfer:\n"))
-                self.do_transfer(transfer_to_card, money_to_transfer)
+                print(self.do_transfer(transfer_to_card, money_to_transfer))
             elif choice == '4':
                 try:
                     self.close_account()
@@ -155,10 +161,10 @@ class Bank:
                     WHERE number = {transfer_to_card};
                     COMMIT;
                   """
-        if card_balance >= money_to_transfer:
+        if card_balance >= money_to_transfer and card_balance != 0:
             self.cur.executescript(query)
             self.conn.commit()
-            print("Success!\n")
+            return "Success!\n"
         else:
             return 'Not enough money!'
 
@@ -167,7 +173,6 @@ class Bank:
         self.cur.execute(query)
         self.conn.commit()
         self.current_card = None
-
 
     def luhn_alg(self):
         card = '400000' + str.zfill(str(randint(000000000, 999999999)), 9)

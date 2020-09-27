@@ -641,60 +641,9 @@ files:
   visible: true
   learner_created: true
 feedback_link: https://hyperskill.org/projects/109/stages/594/implement
-status: Failed
+status: Solved
 feedback:
-  message: |-
-    Wrong answer in test #8
-
-    Account balance is wrong after adding income. Expected 10000
-
-    Please find below the output of your program during this failed test.
-    Note that the '>' character indicates the beginning of the input line.
-
-    ---
-
-    1. Create an account
-    2. Log into account
-    0. Exit
-    > 1
-
-    Your card has been created
-    Your card number:
-    4000000499023861
-    Your card PIN:
-    2862
-
-    1. Create an account
-    2. Log into account
-    0. Exit
-    > 2
-
-    Enter your card number:
-    > 4000000499023861
-    Enter your PIN:
-    > 2862
-
-    You have successfully logged in!
-
-    1. Balance
-    2. Add income
-    3. Do transfer
-    4. Close account
-    5. Log out
-    0. Exit
-    > 2
-    1. Balance
-    2. Add income
-    3. Do transfer
-    4. Close account
-    5. Log out
-    0. Exit
-    > 10000
-    1. Balance
-    2. Add income
-    3. Do transfer
-    4. Close account
-    5. Log out
-    0. Exit
-  time: Fri, 25 Sep 2020 12:50:35 UTC
+  message: Congratulations! Continue on <a href="https://hyperskill.org/projects/109/stages/594/implement">JetBrains
+    Academy</a>
+  time: Sun, 27 Sep 2020 10:04:03 UTC
 record: -1

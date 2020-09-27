@@ -15,7 +15,7 @@ stages:
   is_completed: true
 - id: 594
   step: 9830
-  is_completed: false
+  is_completed: true
 topics:
   0:
   - title: Introduction to OOP
