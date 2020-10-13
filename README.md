@@ -2,7 +2,7 @@
 
 ![Simple banking system](bank.jpg)
 
-### Aapp - for create, managed and delete bank card 
+### App - for create, managed and delete banking card 
 
 **Tech:**
 
@@ -35,6 +35,6 @@
     * Transfer money from card to card
 3. Follow the App menu
 
-#### To play game follow the link  --> [![Run on Repl.it](https://repl.it/badge/github/ofisser86/jb-simple-banking-system)](https://repl.it/github/ofisser86/jb-simple-banking-system) and click button !["Run"](button.png) on the top of the page
+#### To play follow the link  --> [![Run on Repl.it](https://repl.it/badge/github/ofisser86/jb-simple-banking-system)](https://repl.it/github/ofisser86/jb-simple-banking-system) and click button !["Run"](button.png) on the top of the page
 
 ##### [Source code](https://github.com/ofisser86/jb-simple-banking-system/blob/master/Simple-Banking-System/task/banking/banking.py)
