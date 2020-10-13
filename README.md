@@ -1,4 +1,6 @@
-# Simple banking system ![Simple banking system](bank.jpg)
+# Simple banking system
+
+![Simple banking system](bank.jpg)
 
 ### Aapp - for create, managed and delete bank card 
 
