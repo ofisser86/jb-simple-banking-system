@@ -23,7 +23,7 @@
 6. Generates Pipfile.lock
 7. Installs all packages specified in Pipfile.lock `pipenv` update
 
-### Create file passwords
+### Launch the app
 1. In the same directory as `Simple-Banking-System/task/banking/` launch `python banking.py`
 2. You can:
     * Create banking card 
@@ -35,4 +35,4 @@
 
 #### To play game follow the link  --> [![Run on Repl.it](https://repl.it/badge/github/ofisser86/jb-simple-banking-system)](https://repl.it/github/ofisser86/jb-simple-banking-system) and click button !["Run"](button.png) on the top of the page
 
-##### [Source code](https://github.com/ofisser86/jb-simple-banking-system/blob/master/Simple%20Banking%20System/task/banking/banking.py)
+##### [Source code](https://github.com/ofisser86/jb-simple-banking-system/blob/master/Simple-Banking-System/task/banking/banking.py)
