@@ -35,6 +35,6 @@
     * Transfer money from card to card
 3. Follow the App menu
 
-#### To play follow the link  --> [![Run on Repl.it](https://repl.it/badge/github/ofisser86/jb-simple-banking-system)](https://repl.it/github/ofisser86/jb-simple-banking-system) and click button !["Run"](button.png) on the top of the page
+#### To play follow the link  --> [![Run on Repl.it](https://repl.it/badge/github/ofisser86/jb-simple-banking-system)](https://replit.com/@ofisser86/jb-simple-banking-system-2) and click button !["Run"](button.png) on the top of the page
 
 ##### [Source code](https://github.com/ofisser86/jb-simple-banking-system/blob/master/Simple-Banking-System/task/banking/banking.py)
